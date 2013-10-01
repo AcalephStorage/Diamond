@@ -23,8 +23,7 @@ from uptime import UptimeCollector
 class TestUptimeCollector(CollectorTestCase):
     def setUp(self):
         config = get_collector_config('UptimeCollector', {
-                'interval': 10, 
-                'byte_unit': 'byte' 
+                'interval': 10
             })
 
         self.collector = UptimeCollector(config, None)
