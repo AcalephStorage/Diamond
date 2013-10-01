@@ -1,3 +1,14 @@
+# coding=utf-8
+
+"""
+Uses /proc/uptime to get system uptime and idletime
+
+#### Dependencies
+
+ * /proc/uptime
+
+"""
+
 import diamond.collector
 
 class UptimeCollector(diamond.collector.Collector):
