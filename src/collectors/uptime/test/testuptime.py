@@ -37,7 +37,7 @@ class TestUptimeCollector(CollectorTestCase):
     def test_should_open_proc_uptime(self, publish_mock, open_mock):
         open_mock.return_value = StringIO('')
         self.collector.collect()
-        open_mock.assert_called_once_with('/proc/stat')
+        open_mock.assert_called_once_with('/proc/uptime')
 
     @patch('__builtin__.open')
     def test_should_work_with_synthetic_data(self, publish_mock):
@@ -60,7 +60,28 @@ class TestUptimeCollector(CollectorTestCase):
             'uptime.idle': 300.0
         })
 
-    @patch('__builtin__.open')
+    @patch(Collector, 'publish')
     def test_should_work_with_real_data(self, publish_mock):
-        pass
+        UptimeCollector.PROC = self.getFixturePath('proc_uptime_1')
+        self.collector.collect()
 
+        self.assertPublishedMany(publish_mock, {})
+
+        UptimeCollector.PROC = self.getFixturePath('proc_uptime_1')
+        self.collector.collect()
+
+        metrics = {
+            'uptime.up': 600.0, 
+            'uptime.idle': 300.0
+        }
+
+        self.assertPublishedMany(publish_mock, {})        
+        
+        self.setDocExample(collector=self.collector.__class__.__name__,
+                           metrics=metrics,
+                           defaultpath=self.collector.config['path'])
+        self.assertPublishedMany(publish_mock, metrics)
+
+################################################################################
+if __name__ == "__main__":
+    unittest.main()

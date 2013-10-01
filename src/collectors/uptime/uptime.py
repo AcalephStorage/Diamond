@@ -12,6 +12,8 @@ Uses /proc/uptime to get system uptime and idletime
 import diamond.collector
 
 class UptimeCollector(diamond.collector.Collector):
+    PROC = '/proc/stat'
+
     def get_default_config(self):
         """
         Returns the default collector settings
@@ -24,9 +26,8 @@ class UptimeCollector(diamond.collector.Collector):
         return config
 
     def collect(self):
-        PROC = '/proc/uptime'
 
-        with open(PROC, 'r+b') as procFile:
+        with open(self.PROC, 'r+b') as procFile:
             line = procFile.readline()
             uptime, idletime = [ float(val) for val in line.strip().split(" ") ]
 
