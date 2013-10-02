@@ -10,9 +10,10 @@ Uses /proc/uptime to get system uptime and idletime
 """
 
 import diamond.collector
+import os
 
 class UptimeCollector(diamond.collector.Collector):
-    PROC = '/proc/stat'
+    PROC = '/proc/uptime'
 
     def get_default_config(self):
         """
@@ -26,10 +27,13 @@ class UptimeCollector(diamond.collector.Collector):
         return config
 
     def collect(self):
+        if os.access(self.PROC, os.R_OK):
+            uptimeFile = open(self.PROC)
+            times = uptimeFile.readline().strip().split(" ")
+            uptimeFile.close()
 
-        with open(self.PROC, 'r+b') as procFile:
-            line = procFile.readline()
-            uptime, idletime = [ float(val) for val in line.strip().split(" ") ]
+            uptime = float(times[0])
+            idletime = float(times[1])
 
             self.publish('up', uptime)
             self.publish('idle', idletime)
