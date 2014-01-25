@@ -109,13 +109,17 @@ get_hostname.cached_results = {}
 
 def str_to_bool(value):
     """
-    Converts string ('true', 'false') to bool
+    Converts string truthy/falsey strings to a bool
+    Empty strings are false
     """
     if isinstance(value, basestring):
-        if value.strip().lower() == 'true':
+        value = value.strip().lower()
+        if value in ['true', 't', 'yes', 'y']:
             return True
-        else:
+        elif value in ['false', 'f', 'no', 'n', '']:
             return False
+        else:
+            raise NotImplementedError("Unknown bool %s" % value)
 
     return value
 
@@ -222,6 +226,9 @@ class Collector(object):
             # Default Poll Interval (seconds)
             'interval': 300,
 
+            # Default Event TTL (interval multiplier)
+            'ttl_multiplier': 2,
+
             # Default collector threading model
             'method': 'Sequential',
 
@@ -324,10 +331,14 @@ class Collector(object):
         # Get metric Path
         path = self.get_metric_path(name, instance=instance)
 
+        # Get metric TTL
+        ttl = float(self.config['interval']) * float(
+            self.config['ttl_multiplier'])
+
         # Create Metric
         metric = Metric(path, value, raw_value=raw_value, timestamp=None,
                         precision=precision, host=self.get_hostname(),
-                        metric_type=metric_type)
+                        metric_type=metric_type, ttl=ttl)
 
         # Publish Metric
         self.publish_metric(metric)
@@ -345,8 +356,8 @@ class Collector(object):
                             metric_type='GAUGE', instance=instance)
 
     def publish_counter(self, name, value, precision=0, max_value=0,
-                      time_delta=True, interval=None, allow_negative=False,
-                      instance=None):
+                        time_delta=True, interval=None, allow_negative=False,
+                        instance=None):
         raw_value = value
         value = self.derivative(name, value, max_value=max_value,
                                 time_delta=time_delta, interval=interval,
@@ -428,3 +439,38 @@ class Collector(object):
             # method on each handler.
             for handler in self.handlers:
                 handler._flush()
+
+    def find_binary(self, binary):
+        """
+        Scan and return the first path to a binary that we can find
+        """
+        if os.path.exists(binary):
+            return binary
+
+        # Extract out the filename if we were given a full path
+        binary_name = os.path.basename(binary)
+
+        # Gather $PATH
+        search_paths = os.environ['PATH'].split(':')
+
+        # Extra paths to scan...
+        default_paths = [
+            '/usr/bin',
+            '/bin'
+            '/usr/local/bin',
+            '/usr/sbin',
+            '/sbin'
+            '/usr/local/sbin',
+        ]
+
+        for path in default_paths:
+            if path not in search_paths:
+                search_paths.append(path)
+
+        for path in search_paths:
+            if os.path.isdir(path):
+                filename = os.path.join(path, binary_name)
+                if os.path.exists(filename):
+                    return filename
+
+        return binary

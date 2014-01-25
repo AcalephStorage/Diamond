@@ -64,6 +64,7 @@ class PostfixCollector(diamond.collector.Collector):
 
         address = (self.config['host'], int(self.config['port']))
 
+        s = None
         try:
             try:
                 s = socket.create_connection(address, timeout=1)

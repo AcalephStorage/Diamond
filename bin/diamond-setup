@@ -23,6 +23,7 @@ for path in [
         break
 
 from diamond.collector import Collector
+from diamond.collector import str_to_bool
 
 
 def getIncludePaths(path):
@@ -103,12 +104,7 @@ def stringToType(key, val):
             config_file[key] = val
     elif isinstance(obj.config[key], bool):
         if isinstance(val, basestring):
-            if val.lower() == 'false':
-                config_file[key] = False
-            elif val.lower() == 'true':
-                config_file[key] = True
-            else:
-                raise NotImplementedError("Unknown type!")
+            config_file[key] = str_to_bool(val)
         else:
             config_file[key] = bool(val)
     elif isinstance(obj.config[key], int):
@@ -122,12 +118,7 @@ def stringToType(key, val):
 
 def boolCheck(val):
     if isinstance(val, basestring):
-        if val.lower() == 'false':
-            return False
-        elif val.lower() == 'true':
-            return True
-        else:
-            raise NotImplementedError("Unknown type!")
+        return str_to_bool(val)
     elif isinstance(val, bool):
         return val
     else:
@@ -207,9 +198,9 @@ if __name__ == "__main__":
 
     getIncludePaths(config['server']['collectors_path'])
     getCollectors(config['server']['collectors_path'])
-
     tests = []
 
+    foundcollector = False
     for collector in collectors:
         if options.collector and collector != options.collector:
             continue
@@ -217,6 +208,8 @@ if __name__ == "__main__":
         # Skip configuring the basic collector object
         if collector == "Collector":
             continue
+
+        foundcollector = True
 
         config_keys = {}
         config_file = ConfigObj()
@@ -273,3 +266,5 @@ if __name__ == "__main__":
             sys.exit()
         except:
             continue
+    if not foundcollector:
+        print "Collector not found."

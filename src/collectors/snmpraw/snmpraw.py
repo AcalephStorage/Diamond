@@ -49,7 +49,7 @@ restart diamond.
 
 #### Dependencies
 
- * pysmnp (which depends on pyasn1 and pycrypto)
+ * pysmnp (which depends on pyasn1 0.1.7 and pycrypto)
 
 """
 
@@ -113,9 +113,11 @@ class SNMPRawCollector(parent_SNMPCollector):
             device, data))
 
         if len(data) != 1:
-            self._skip(device, oid,
-                       'unexpected response, data has {0} entries'.format(
-                        len(data)))
+            self._skip(
+                device,
+                oid,
+                'unexpected response, data has {0} entries'.format(
+                    len(data)))
             return
 
         # because we only allow 1-key dicts, we can pick with absolute index

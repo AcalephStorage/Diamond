@@ -48,14 +48,16 @@ class TestHttpdCollector(CollectorTestCase):
     def test_should_work_with_synthetic_data(self, publish_mock):
         self.setUp()
 
-        patch_read = patch.object(TestHTTPResponse,
-                                  'read',
-                                  Mock(return_value=self.getFixture(
-                                    'server-status-fake-1').getvalue()))
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-fake-1').getvalue()))
 
-        patch_headers = patch.object(TestHTTPResponse,
-                                     'getheaders',
-                                     Mock(return_value={}))
+        patch_headers = patch.object(
+            TestHTTPResponse,
+            'getheaders',
+            Mock(return_value={}))
 
         patch_headers.start()
         patch_read.start()
@@ -64,10 +66,11 @@ class TestHttpdCollector(CollectorTestCase):
 
         self.assertPublishedMany(publish_mock, {})
 
-        patch_read = patch.object(TestHTTPResponse,
-                                  'read',
-                                  Mock(return_value=self.getFixture(
-                                    'server-status-fake-2').getvalue()))
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-fake-2').getvalue()))
 
         patch_read.start()
         self.collector.collect()
@@ -87,14 +90,16 @@ class TestHttpdCollector(CollectorTestCase):
     def test_should_work_with_real_data(self, publish_mock):
         self.setUp()
 
-        patch_read = patch.object(TestHTTPResponse,
-                                  'read',
-                                  Mock(return_value=self.getFixture(
-                                    'server-status-live-1').getvalue()))
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-live-1').getvalue()))
 
-        patch_headers = patch.object(TestHTTPResponse,
-                                     'getheaders',
-                                     Mock(return_value={}))
+        patch_headers = patch.object(
+            TestHTTPResponse,
+            'getheaders',
+            Mock(return_value={}))
 
         patch_headers.start()
         patch_read.start()
@@ -103,10 +108,11 @@ class TestHttpdCollector(CollectorTestCase):
 
         self.assertPublishedMany(publish_mock, {})
 
-        patch_read = patch.object(TestHTTPResponse,
-                                  'read',
-                                  Mock(return_value=self.getFixture(
-                                    'server-status-live-2').getvalue()))
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-live-2').getvalue()))
 
         patch_read.start()
         self.collector.collect()
@@ -132,14 +138,16 @@ class TestHttpdCollector(CollectorTestCase):
             ],
         })
 
-        patch_read = patch.object(TestHTTPResponse,
-                                  'read',
-                                  Mock(return_value=self.getFixture(
-                                    'server-status-live-1').getvalue()))
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-live-1').getvalue()))
 
-        patch_headers = patch.object(TestHTTPResponse,
-                                     'getheaders',
-                                     Mock(return_value={}))
+        patch_headers = patch.object(
+            TestHTTPResponse,
+            'getheaders',
+            Mock(return_value={}))
 
         patch_headers.start()
         patch_read.start()
@@ -148,10 +156,11 @@ class TestHttpdCollector(CollectorTestCase):
 
         self.assertPublishedMany(publish_mock, {})
 
-        patch_read = patch.object(TestHTTPResponse,
-                                  'read',
-                                  Mock(return_value=self.getFixture(
-                                    'server-status-live-2').getvalue()))
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-live-2').getvalue()))
 
         patch_read.start()
         self.collector.collect()
@@ -177,6 +186,51 @@ class TestHttpdCollector(CollectorTestCase):
         self.setDocExample(collector=self.collector.__class__.__name__,
                            metrics=metrics,
                            defaultpath=self.collector.config['path'])
+        self.assertPublishedMany(publish_mock, metrics)
+
+    @patch.object(Collector, 'publish')
+    def test_issue_456(self, publish_mock):
+        self.setUp(config={
+            'urls': 'vhost http://localhost/server-status?auto',
+        })
+
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-live-3').getvalue()))
+
+        patch_headers = patch.object(
+            TestHTTPResponse,
+            'getheaders',
+            Mock(return_value={}))
+
+        patch_headers.start()
+        patch_read.start()
+        self.collector.collect()
+        patch_read.stop()
+
+        self.assertPublishedMany(publish_mock, {})
+
+        patch_read = patch.object(
+            TestHTTPResponse,
+            'read',
+            Mock(return_value=self.getFixture(
+                'server-status-live-4').getvalue()))
+
+        patch_read.start()
+        self.collector.collect()
+        patch_read.stop()
+        patch_headers.stop()
+
+        metrics = {
+            'TotalAccesses': 329,
+            'ReqPerSec': 0.156966,
+            'BytesPerSec': 2417,
+            'BytesPerReq': 15403,
+            'BusyWorkers': 1,
+            'IdleWorkers': 17,
+        }
         self.assertPublishedMany(publish_mock, metrics)
 
 ################################################################################

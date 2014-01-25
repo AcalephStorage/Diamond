@@ -63,7 +63,6 @@ __author__ = 'Jan-Piet Mens'
 __email__ = 'jpmens@gmail.com'
 
 from Handler import Handler
-import mosquitto
 from diamond.collector import get_hostname
 import os
 HAVE_SSL = True
@@ -71,6 +70,12 @@ try:
     import ssl
 except ImportError:
     HAVE_SSL = False
+
+try:
+    import mosquitto
+    mosquitto  # Pyflakes
+except ImportError:
+    mosquitto = None
 
 
 class MQTTHandler(Handler):
@@ -105,6 +110,10 @@ class MQTTHandler(Handler):
         except:
             self.timestamp = 1
 
+        if not mosquitto:
+            self.log.error('mosquitto import failed. Handler disabled')
+            return
+
         # Initialize
         self.mqttc = mosquitto.Mosquitto(self.client_id, clean_session=True)
 
@@ -119,9 +128,7 @@ class MQTTHandler(Handler):
             self.certfile = self.config.get('certfile', None)
             self.keyfile = self.config.get('keyfile', None)
 
-            if (self.cafile is None
-                or self.certfile is None
-                or self.keyfile is None):
+            if None in [self.cafile, self.certfile, self.keyfile]:
                 self.log.error("MQTTHandler: TLS configuration missing.")
                 return
 
@@ -138,7 +145,7 @@ class MQTTHandler(Handler):
                                + "configuration. Files missing?")
 
         self.mqttc.will_set("clients/diamond/%s" % (self.hostname),
-                payload="Adios!", qos=0, retain=False)
+                            payload="Adios!", qos=0, retain=False)
         self.mqttc.connect(self.host, self.port, 60)
 
         self.mqttc.on_disconnect = self._disconnect
@@ -170,6 +177,9 @@ class MQTTHandler(Handler):
         Process a metric by converting metric name to MQTT topic name;
         the payload is metric and timestamp.
         """
+
+        if not mosquitto:
+            return
 
         line = str(metric)
         topic, value, timestamp = line.split()

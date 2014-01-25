@@ -48,24 +48,6 @@ class Server(object):
         config = configobj.ConfigObj(configfile)
         config['configfile'] = self.config['configfile']
 
-        # Merge in handler config files into the main config
-        if 'handlers_config_path' in config['server']:
-            files = os.listdir(config['server']['handlers_config_path'])
-            for filename in files:
-                configname = os.path.basename(filename)
-                handlername = configname.split('.')[0]
-                if handlername not in self.config['handlers']:
-                    config['handlers'][handlername] = configobj.ConfigObj()
-
-                configfile = os.path.join(
-                    config['server']['handlers_config_path'],
-                    configname)
-                hconfig = configobj.ConfigObj(configfile)
-                if handlername in config['handlers']:
-                    config['handlers'][handlername].merge(hconfig)
-                else:
-                    config['handlers'][handlername] = hconfig
-
         self.config = config
 
     def load_handler(self, fqcn):
@@ -102,6 +84,14 @@ class Server(object):
                 if cls.__name__ in self.config['handlers']:
                     # Merge Handler config section
                     handler_config.merge(self.config['handlers'][cls.__name__])
+
+                # Check for config file in config directory
+                configfile = os.path.join(
+                    self.config['server']['handlers_config_path'],
+                    cls.__name__) + '.conf'
+                if os.path.exists(configfile):
+                    # Merge Collector config file
+                    handler_config.merge(configobj.ConfigObj(configfile))
 
                 # Initialize Handler class
                 self.handlers.append(cls(handler_config))
@@ -263,9 +253,9 @@ class Server(object):
                           c.__class__.__name__)
             return
 
-        if c.config['enabled'] != True:
-            self.log.warn("Skipped loading disabled Collector: %s",
-                          c.__class__.__name__)
+        if c.config['enabled'] is not True:
+            self.log.debug("Skipped loading disabled Collector: %s",
+                           c.__class__.__name__)
             return
 
         # Get collector schedule
@@ -363,8 +353,15 @@ class Server(object):
         self.load_config()
 
         # Load collectors
-        self.load_include_path(os.path.dirname(file))
-        collectors = self.load_collectors(os.path.dirname(file), file)
+        if os.path.dirname(file) == '':
+            tmp_path = self.config['server']['collectors_path']
+        else:
+            tmp_path = os.path.dirname(file)
+        self.load_include_path(tmp_path)
+        collectors = self.load_collectors(tmp_path, file)
+        for item in collectors.keys():
+            if not item.lower() in file.lower():
+                del collectors[item]
 
         # Setup Collectors
         for cls in collectors.values():

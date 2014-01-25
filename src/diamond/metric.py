@@ -11,7 +11,7 @@ class Metric(object):
     _METRIC_TYPES = ['COUNTER', 'GAUGE']
 
     def __init__(self, path, value, raw_value=None, timestamp=None, precision=0,
-                 host=None, metric_type='COUNTER'):
+                 host=None, metric_type='COUNTER', ttl=None):
         """
         Create new instance of the Metric class
 
@@ -24,9 +24,7 @@ class Metric(object):
         """
 
         # Validate the path, value and metric_type submitted
-        if (path is None
-            or value is None
-            or metric_type not in self._METRIC_TYPES):
+        if (None in [path, value] or metric_type not in self._METRIC_TYPES):
             raise DiamondException("Invalid parameter.")
 
         # If no timestamp was passed in, set it to the current time
@@ -58,6 +56,7 @@ class Metric(object):
         self.precision = precision
         self.host = host
         self.metric_type = metric_type
+        self.ttl = ttl
 
     def __repr__(self):
         """

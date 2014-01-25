@@ -29,6 +29,7 @@ GRANT PROCESS ON *.* TO 'user'@'hostname' IDENTIFIED BY
 """
 
 import diamond.collector
+from diamond.collector import str_to_bool
 import re
 import time
 
@@ -236,6 +237,11 @@ class MySQLCollector(diamond.collector.Collector):
             )
             self.config['hosts'].append(hoststr)
 
+        # Normalize some config vars
+        self.config['master'] = str_to_bool(self.config['master'])
+        self.config['slave'] = str_to_bool(self.config['slave'])
+        self.config['innodb'] = str_to_bool(self.config['innodb'])
+
         self.db = None
 
     def get_default_config_help(self):
@@ -320,7 +326,7 @@ class MySQLCollector(diamond.collector.Collector):
             except:
                 pass
 
-        if self.config['master'] == 'True':
+        if self.config['master']:
             metrics['master'] = {}
             try:
                 rows = self.get_db_master_status()
@@ -336,7 +342,7 @@ class MySQLCollector(diamond.collector.Collector):
                 self.log.error('MySQLCollector: Couldnt get master status')
                 pass
 
-        if self.config['slave'] == 'True':
+        if self.config['slave']:
             metrics['slave'] = {}
             try:
                 rows = self.get_db_slave_status()
@@ -352,7 +358,7 @@ class MySQLCollector(diamond.collector.Collector):
                 self.log.error('MySQLCollector: Couldnt get slave status')
                 pass
 
-        if self.config['innodb'] == 'True':
+        if self.config['innodb']:
             metrics['innodb'] = {}
             innodb_status_timer = time.time()
             try:
@@ -414,7 +420,7 @@ class MySQLCollector(diamond.collector.Collector):
                                                    metric_value)
                 if key == 'status':
                     if ('publish' not in self.config
-                             or metric_name in self.config['publish']):
+                            or metric_name in self.config['publish']):
                         self.publish(nickname + metric_name, metric_value)
                 else:
                     self.publish(nickname + metric_name, metric_value)

@@ -31,7 +31,7 @@ class HostedGraphiteHandler(Handler):
 
         self.key = self.config['apikey'].lower().strip()
 
-        self.graphite = GraphiteHandler(config)
+        self.graphite = GraphiteHandler(self.config)
 
     def get_default_config_help(self):
         """
@@ -46,8 +46,7 @@ class HostedGraphiteHandler(Handler):
             'proto': 'udp or tcp',
             'timeout': '',
             'batch': 'How many to store before sending to the graphite server',
-            'max_backlog_multiplier': 'how many batches to store before '
-                'trimming',
+            'max_backlog_multiplier': 'how many batches to store before trimming',  # NOQA
             'trim_backlog_multiplier': 'Trim down how many batches',
         })
 
