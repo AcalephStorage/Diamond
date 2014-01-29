@@ -50,6 +50,16 @@ def flatten_dictionary(input, sep='.', prefix=None):
 
 class CephCollector(diamond.collector.Collector):
 
+    def __init__(self, config, handlers):
+        super(CephCollector, self).__init__(config, handlers)
+
+        # parse exempt_metrics
+        self.config['exempt_metrics'] = [ 
+            ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') + '(\..*)?$' for \
+                metric_path in self.config['exempt_metrics'].strip().split(',')] if \
+                self.config['exempt_metrics'].strip() else []
+
+
     def get_default_config_help(self):
         config_help = super(CephCollector, self).get_default_config_help()
         config_help.update({
@@ -150,10 +160,6 @@ class CephCollector(diamond.collector.Collector):
         """
         Collect stats
         """
-        self.config['exempt_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') + '(\..*)?$' for \
-                                             metric_path in self.config['exempt_metrics'].strip().split(',')] if \
-                                             self.config['exempt_metrics'].strip() else []
-
         for path in self._get_socket_paths():
             self.log.debug('checking %s', path)
             counter_prefix = self._get_counter_prefix_from_socket_name(path)
