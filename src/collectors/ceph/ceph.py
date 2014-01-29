@@ -60,6 +60,7 @@ class CephCollector(diamond.collector.Collector):
                           ' Defaults to "asok"',
             'ceph_binary': 'Path to "ceph" executable. '
                            'Defaults to /usr/bin/ceph.',
+            'exempt_metrics': 'Comma-separated string of metric_paths to exempt from collection.'
         })
         return config_help
 
@@ -73,6 +74,7 @@ class CephCollector(diamond.collector.Collector):
             'socket_prefix': 'ceph-',
             'socket_ext': 'asok',
             'ceph_binary': '/usr/bin/ceph',
+            'exempt_metrics': ''
         })
         return config
 
@@ -125,6 +127,15 @@ class CephCollector(diamond.collector.Collector):
 
         return json_data
 
+    def _is_exempted(self, stat_name):
+        for path in self.config['exempt_metrics']:
+            exempt_path = 'ceph.' + path
+            stats = self._get_stats_from_socket(path)
+            if stat_name.startswith(exempt_path):
+                return True
+
+        return False
+
     def _publish_stats(self, counter_prefix, stats):
         """Given a stats dictionary from _get_stats_from_socket,
         publish the individual values.
@@ -133,9 +144,12 @@ class CephCollector(diamond.collector.Collector):
             stats,
             prefix=counter_prefix,
         ):
-            self.publish_gauge(stat_name, stat_value)
+            if not self._is_exempted(stat_name):
+                self.publish_gauge(stat_name, stat_value)
 
     def collect(self):
+        self.config['exempt_metrics'] = [ self._get_counter_prefix_from_socket_name(metric_path.strip()) \ 
+                                            for metric_path in self.config['exempt_metrics'].split(',')]
         """
         Collect stats
         """
