@@ -20,6 +20,7 @@ except ImportError:
 
 import glob
 import os
+import re
 import subprocess
 
 import diamond.collector
@@ -129,7 +130,7 @@ class CephCollector(diamond.collector.Collector):
 
     def _is_exempted(self, stat_name):
         for exempt_path in self.config['exempt_metrics']:
-            if stat_name.startswith(exempt_path):
+            if re.match(exempt_path, stat_name):
                 return True
 
         return False
@@ -149,7 +150,7 @@ class CephCollector(diamond.collector.Collector):
         """
         Collect stats
         """
-        self.config['exempt_metrics'] = [ 'ceph.' + metric_path.strip() for \
+        self.config['exempt_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '.+') for \
                                              metric_path in self.config['exempt_metrics'].split(',')]
 
         for path in self._get_socket_paths():
