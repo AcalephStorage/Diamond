@@ -151,7 +151,8 @@ class CephCollector(diamond.collector.Collector):
         Collect stats
         """
         self.config['exempt_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') for \
-                                             metric_path in self.config['exempt_metrics'].split(',')]
+                                             metric_path in self.config['exempt_metrics'].strip().split(',')] if \
+                                             self.config['exempt_metrics'].strip() else []
 
         for path in self._get_socket_paths():
             self.log.debug('checking %s', path)
