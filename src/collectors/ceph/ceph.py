@@ -148,8 +148,8 @@ class CephCollector(diamond.collector.Collector):
                 self.publish_gauge(stat_name, stat_value)
 
     def collect(self):
-        self.config['exempt_metrics'] = [ self._get_counter_prefix_from_socket_name(metric_path.strip()) \ 
-                                            for metric_path in self.config['exempt_metrics'].split(',')]
+        self.config['exempt_metrics'] = [ self._get_counter_prefix_from_socket_name(metric_path.strip()) for \
+                                             metric_path in self.config['exempt_metrics'].split(',')]
         """
         Collect stats
         """
