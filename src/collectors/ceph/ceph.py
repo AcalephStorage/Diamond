@@ -128,9 +128,7 @@ class CephCollector(diamond.collector.Collector):
         return json_data
 
     def _is_exempted(self, stat_name):
-        for path in self.config['exempt_metrics']:
-            exempt_path = 'ceph.' + path
-            stats = self._get_stats_from_socket(path)
+        for exempt_path in self.config['exempt_metrics']:
             if stat_name.startswith(exempt_path):
                 return True
 
@@ -148,11 +146,12 @@ class CephCollector(diamond.collector.Collector):
                 self.publish_gauge(stat_name, stat_value)
 
     def collect(self):
-        self.config['exempt_metrics'] = [ self._get_counter_prefix_from_socket_name(metric_path.strip()) for \
-                                             metric_path in self.config['exempt_metrics'].split(',')]
         """
         Collect stats
         """
+        self.config['exempt_metrics'] = [ 'ceph.' + metric_path.strip() for \
+                                             metric_path in self.config['exempt_metrics'].split(',')]
+
         for path in self._get_socket_paths():
             self.log.debug('checking %s', path)
             counter_prefix = self._get_counter_prefix_from_socket_name(path)
