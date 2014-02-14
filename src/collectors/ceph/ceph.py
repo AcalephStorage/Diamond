@@ -129,7 +129,7 @@ class CephCollector(diamond.collector.Collector):
         return json_data
 
     def _is_exempted(self, stat_name):
-        for exempt_path in self.config['exempt_metrics']:
+        for exempt_path in self.config['exempted_metrics']:
             if re.match(exempt_path, stat_name):
                 return True
 
@@ -150,7 +150,7 @@ class CephCollector(diamond.collector.Collector):
         """
         Collect stats
         """
-        self.config['exempt_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') + '(\..*)?$' for \
+        self.config['exempted_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') + '(\..*)?$' for \
                                              metric_path in self.config['exempt_metrics'].strip().split(',')] if \
                                              self.config['exempt_metrics'].strip() else []
 
