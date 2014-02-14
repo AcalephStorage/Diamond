@@ -129,6 +129,11 @@ class CephCollector(diamond.collector.Collector):
         return json_data
 
     def _is_exempted(self, stat_name):
+        if not self.config.has_key('exempted_metrics'):
+            self.config['exempted_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') + '(\..*)?$' for \
+                                             metric_path in self.config['exempt_metrics'].strip().split(',')] if \
+                                             self.config['exempt_metrics'].strip() else []
+
         for exempt_path in self.config['exempted_metrics']:
             if re.match(exempt_path, stat_name):
                 return True
@@ -150,10 +155,6 @@ class CephCollector(diamond.collector.Collector):
         """
         Collect stats
         """
-        self.config['exempted_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') + '(\..*)?$' for \
-                                             metric_path in self.config['exempt_metrics'].strip().split(',')] if \
-                                             self.config['exempt_metrics'].strip() else []
-
         for path in self._get_socket_paths():
             self.log.debug('checking %s', path)
             counter_prefix = self._get_counter_prefix_from_socket_name(path)
