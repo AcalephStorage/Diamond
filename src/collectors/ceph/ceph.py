@@ -55,8 +55,6 @@ class CephCollector(diamond.collector.Collector):
         config_help.update({
             'socket_path': 'The location of the ceph monitoring sockets.'
                            ' Defaults to "/var/run/ceph"',
-            'socket_prefix': 'The first part of all socket names.'
-                             ' Defaults to "ceph-"',
             'socket_ext': 'Extension for socket filenames.'
                           ' Defaults to "asok"',
             'ceph_binary': 'Path to "ceph" executable. '
@@ -73,7 +71,6 @@ class CephCollector(diamond.collector.Collector):
         config = super(CephCollector, self).get_default_config()
         config.update({
             'socket_path': '/var/run/ceph',
-            'socket_prefix': 'ceph-',
             'socket_ext': 'asok',
             'ceph_binary': '/usr/bin/ceph',
             'exempt_metrics': '', 

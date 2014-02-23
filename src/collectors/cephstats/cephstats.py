@@ -2,6 +2,7 @@ import subprocess
 import re
 import os
 import sys
+import json
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '../ceph')
@@ -20,7 +21,7 @@ class CephStatsCollector(ceph.CephCollector):
         Get ceph stats
         """
         try:
-            output = subprocess.check_output([self.config['ceph_binary'], '--cluster=%s' % (self.config['cluster_name']),  '-s'])
+            output = subprocess.check_output([self.config['ceph_binary'], '--cluster=%s' % (self.config['cluster_name']),  '-s', '--format=json'])
         except subprocess.CalledProcessError, err:
             self.log.info(
                 'Could not get stats: %s' % err)
