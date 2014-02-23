@@ -41,6 +41,8 @@ class CephPoolStatsCollector(ceph.CephCollector):
         stats = self._get_stats()
 
         for pool in stats:
-            self._publish_stats('cephpoolstats.%s' % pool['pool_name'], pool)
+            pool_id = pool.pop('pool_id')
+            pool_name = pool.pop('pool_name')
+            self._publish_stats('cephpoolstats.%s' % pool_name, pool)
 
         return
