@@ -61,7 +61,8 @@ class CephCollector(diamond.collector.Collector):
                           ' Defaults to "asok"',
             'ceph_binary': 'Path to "ceph" executable. '
                            'Defaults to /usr/bin/ceph.',
-            'exempt_metrics': 'Comma-separated string of metric_paths to exempt from collection.'
+            'exempt_metrics': 'Comma-separated string of metric_paths to exempt from collection.', 
+            'cluster_name': 'Specify the cluster name if not using the default "ceph". Will be used in place of the old "socket_prefix" configuration parameter.'
         })
         return config_help
 
@@ -75,7 +76,8 @@ class CephCollector(diamond.collector.Collector):
             'socket_prefix': 'ceph-',
             'socket_ext': 'asok',
             'ceph_binary': '/usr/bin/ceph',
-            'exempt_metrics': ''
+            'exempt_metrics': '', 
+            'cluster_name': 'ceph'
         })
         return config
 
@@ -84,8 +86,8 @@ class CephCollector(diamond.collector.Collector):
         with ceph daemons.
         """
         socket_pattern = os.path.join(self.config['socket_path'],
-                                      (self.config['socket_prefix']
-                                       + '*.' + self.config['socket_ext']))
+                                      (self.config['cluster_name']
+                                       + '-*.' + self.config['socket_ext']))
         return glob.glob(socket_pattern)
 
     def _get_counter_prefix_from_socket_name(self, name):
@@ -93,8 +95,8 @@ class CephCollector(diamond.collector.Collector):
         for counters coming from that source.
         """
         base = os.path.splitext(os.path.basename(name))[0]
-        if base.startswith(self.config['socket_prefix']):
-            base = base[len(self.config['socket_prefix']):]
+        if base.startswith(self.config['cluster_name']):
+            base = base[len(self.config['cluster_name']):]
         return 'ceph.' + base
 
     def _get_stats_from_socket(self, name):
