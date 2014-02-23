@@ -95,8 +95,8 @@ class CephCollector(diamond.collector.Collector):
         for counters coming from that source.
         """
         base = os.path.splitext(os.path.basename(name))[0]
-        if base.startswith(self.config['cluster_name']):
-            base = base[len(self.config['cluster_name']):]
+        if base.startswith(self.config['cluster_name'] + "-"):
+            base = base[len(self.config['cluster_name'] + "-"):]
         return 'ceph.' + base
 
     def _get_stats_from_socket(self, name):
