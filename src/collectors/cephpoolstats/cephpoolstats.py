@@ -19,7 +19,7 @@ Get ceph pool stats from one node
 class CephPoolStatsCollector(ceph.CephCollector):
     def _get_stats(self):
         """
-        Get ceph stats
+        Get ceph pool stats
         """
         cmd = "%s --cluster=%s osd pool stats --format=json" % (self.config['ceph_binary'], self.config['cluster_name'])
         cmd_spl = shlex.split(cmd)
@@ -36,7 +36,7 @@ class CephPoolStatsCollector(ceph.CephCollector):
 
     def collect(self):
         """
-        Collect ceph stats
+        Collect ceph pool stats
         """
         stats = self._get_stats()
 
