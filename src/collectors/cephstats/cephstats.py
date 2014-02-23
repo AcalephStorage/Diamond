@@ -20,7 +20,7 @@ class CephStatsCollector(ceph.CephCollector):
         Get ceph stats
         """
         try:
-            output = subprocess.check_output(['ceph', '-s'])
+            output = subprocess.check_output([self.config['ceph_binary'], '-s'])
         except subprocess.CalledProcessError, err:
             self.log.info(
                 'Could not get stats: %s' % err)
