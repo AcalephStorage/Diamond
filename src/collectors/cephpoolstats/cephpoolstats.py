@@ -32,7 +32,7 @@ class CephPoolStatsCollector(ceph.CephCollector):
             self.log.exception('Could not get pool stats')
             return {}
 
-        return json.loads(output)
+        return { 'pools': json.loads(output) }
 
     def collect(self):
         """
