@@ -32,13 +32,15 @@ class CephPoolStatsCollector(ceph.CephCollector):
             self.log.exception('Could not get pool stats')
             return {}
 
-        return { 'pools': json.loads(output) }
+        return json.loads(output)
 
     def collect(self):
         """
         Collect ceph stats
         """
         stats = self._get_stats()
-        self._publish_stats('cephpoolstats', stats)
+
+        for pool in stats:
+            self._publish_stats('cephpoolstats.%s' % pool['pool_name'], pool)
 
         return
