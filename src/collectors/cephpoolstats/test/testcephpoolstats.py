@@ -20,11 +20,6 @@ from diamond.collector import Collector
 import cephpoolstats
 
 
-def run_only_if_assertSequenceEqual_is_available(func):
-    pred = lambda: 'assertSequenceEqual' in dir(unittest.TestCase)
-    return run_only(func, pred)
-
-
 def run_only_if_subprocess_check_output_is_available(func):
     pred = lambda: 'check_output' in dir(subprocess)
     return run_only(func, pred)
@@ -73,6 +68,6 @@ class TestCephCollectorGettingStats(CollectorTestCase):
         actual = self.collector._get_stats()
         check_output.assert_called_with(cmd_spl)
         self.assertEqual(actual, [])
-    
+
 if __name__ == "__main__":
     unittest.main()
