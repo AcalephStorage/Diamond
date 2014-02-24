@@ -34,15 +34,28 @@ class CephPoolStatsCollector(ceph.CephCollector):
 
         return json.loads(output)
 
+    def _publish_stat_sums(self, pool_stats):
+        sums = {}
+        for pool in pool_stats:
+            flat_pool = ceph.flattend_dictionary(pool)
+
+            for metric, value in flat_pool:
+                fval = float(value)
+                sums[metric] = (sums[metric] + fval) if metric in sums else fval
+
+        self._publish_stats(self.config['cluster_name'], sums)
+
     def collect(self):
         """
         Collect ceph pool stats
         """
         stats = self._get_stats()
+        cluster_name = self.config['cluster_name']
 
         for pool in stats:
             pool_id = pool.pop('pool_id')
             pool_name = pool.pop('pool_name')
-            self._publish_stats('cephpoolstats.%s' % pool_name, pool)
+            
+            self._publish_stats('%s.%s' % (cluster_name, pool_name), pool)
 
         return
