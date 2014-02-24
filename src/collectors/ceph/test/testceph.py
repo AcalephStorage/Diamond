@@ -116,7 +116,7 @@ class TestCephCollectorSocketNameHandling(CollectorTestCase):
     def test_get_socket_paths(self, glob_mock):
         config = get_collector_config('CephCollector', {
             'socket_path': '/path/',
-            'socket_prefix': 'prefix-',
+            'cluster_name': 'prefix',
             'socket_ext': 'ext',
         })
         collector = ceph.CephCollector(config, None)
