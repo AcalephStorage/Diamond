@@ -57,7 +57,7 @@ class CephPoolStatsCollector(ceph.CephCollector):
             pool_id = pool.pop('pool_id')
             pool_name = pool.pop('pool_name')
             
-            self._publish_stats('%s.%s' % (cluster_name, pool_name), pool)
+            self._publish_stats('%s.%d' % (cluster_name, pool_id), pool)
 
         self._publish_stat_sums(stats)
 
