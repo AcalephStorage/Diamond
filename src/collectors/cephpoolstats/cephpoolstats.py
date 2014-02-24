@@ -37,7 +37,7 @@ class CephPoolStatsCollector(ceph.CephCollector):
     def _publish_stat_sums(self, pool_stats):
         sums = {}
         for pool in pool_stats:
-            flat_pool = ceph.flattend_dictionary(pool)
+            flat_pool = ceph.flatten_dictionary(pool)
 
             for metric, value in flat_pool:
                 fval = float(value)
@@ -53,9 +53,12 @@ class CephPoolStatsCollector(ceph.CephCollector):
         cluster_name = self.config['cluster_name']
 
         for pool in stats:
+            # remove pool_id and pool_name from the data
             pool_id = pool.pop('pool_id')
             pool_name = pool.pop('pool_name')
             
             self._publish_stats('%s.%s' % (cluster_name, pool_name), pool)
+
+        self._publish_stat_sums(stats)
 
         return
