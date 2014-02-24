@@ -24,7 +24,7 @@ def run_only_if_subprocess_check_output_is_available(func):
     pred = lambda: 'check_output' in dir(subprocess)
     return run_only(func, pred)
 
-class TestCephCollectorGettingStats(CollectorTestCase):
+class TestCephPoolStatsCollectorGettingStats(CollectorTestCase):
 
     def setUp(self):
         config = get_collector_config('CephPoolStatsCollector', {
