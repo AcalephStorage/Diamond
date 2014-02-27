@@ -112,7 +112,7 @@ class Handler(object):
         now = time.time()
         if msg in self._errors:
             if ((now - self._errors[msg]) >=
-                    self.server_error_interval):
+                    self.config['server_error_interval']):
                 fn = self.log.error
                 self._errors[msg] = now
             else:
