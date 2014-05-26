@@ -50,14 +50,13 @@ class CephPoolStatsCollector(ceph.CephCollector):
         Collect ceph pool stats
         """
         stats = self._get_stats()
-        cluster_name = self.config['cluster_name']
 
         for pool in stats:
             # remove pool_id and pool_name from the data
             pool_id = pool.pop('pool_id')
             pool_name = pool.pop('pool_name')
             
-            self._publish_stats('%s.%s' % (cluster_name, pool_name), pool)
+            self._publish_stats('ceph.%s' % (cluster_name, pool_name), pool)
 
         self._publish_stat_sums(stats)
 
