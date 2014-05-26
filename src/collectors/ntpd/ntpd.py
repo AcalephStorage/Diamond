@@ -69,10 +69,31 @@ class NtpdCollector(diamond.collector.Collector):
 
             data['stratum'] = parts[2]
             data['when'] = parts[4]
+            if data['when'] == '-':
+                # sometimes, ntpq returns value '-' for 'when', continuos
+                # and try other system peer
+                continue
             data['poll'] = parts[5]
             data['reach'] = parts[6]
             data['delay'] = parts[7]
             data['jitter'] = parts[9]
+
+        def convert_to_second(when_ntpd_ouput):
+            value = float(when_ntpd_ouput[:-1])
+            if when_ntpd_ouput.endswith('m'):
+                return value * 60
+            elif when_ntpd_ouput.endswith('h'):
+                return value * 3600
+            elif when_ntpd_ouput.endswith('d'):
+                return value * 86400
+
+        if 'when' in data:
+            if data['when'] == '-':
+                self.log.warning('ntpq returned bad value for "when"')
+                return []
+
+            if data['when'].endswith(('m', 'h', 'd')):
+                data['when'] = convert_to_second(data['when'])
 
         return data.items()
 

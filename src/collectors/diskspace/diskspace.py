@@ -107,6 +107,7 @@ class DiskSpaceCollector(diamond.collector.Collector):
             return labels
 
         for label in os.listdir(path):
+            label = label.replace('\\x2f', '/')
             device = os.path.realpath(path + '/' + label)
             labels[device] = label
 
@@ -142,7 +143,7 @@ class DiskSpaceCollector(diamond.collector.Collector):
                     continue
 
                 # Process the filters
-                if self.exclude_reg.match(mount_point):
+                if self.exclude_reg.search(mount_point):
                     self.log.debug("Ignoring %s since it is in the "
                                    + "exclude_filter list.", mount_point)
                     continue
@@ -206,7 +207,11 @@ class DiskSpaceCollector(diamond.collector.Collector):
                     name = 'root'
 
             if hasattr(os, 'statvfs'):  # POSIX
-                data = os.statvfs(info['mount_point'])
+                try:
+                    data = os.statvfs(info['mount_point'])
+                except OSError, e:
+                    self.log.exception(e)
+                    continue
 
                 block_size = data.f_bsize
 
@@ -257,9 +262,10 @@ class DiskSpaceCollector(diamond.collector.Collector):
                     self.publish_gauge(metric_name, metric_value, 2)
 
             if os.name != 'nt':
-                self.publish_gauge(
-                    '%s.inodes_percentfree' % name,
-                    float(inodes_free) / float(inodes_total) * 100)
+                if float(inodes_total) > 0:
+                    self.publish_gauge(
+                        '%s.inodes_percentfree' % name,
+                        float(inodes_free) / float(inodes_total) * 100)
                 self.publish_gauge('%s.inodes_used' % name,
                                    inodes_total - inodes_free)
                 self.publish_gauge('%s.inodes_free' % name, inodes_free)

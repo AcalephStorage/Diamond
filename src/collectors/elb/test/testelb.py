@@ -12,7 +12,7 @@ from test import run_only
 from mock import Mock
 
 from diamond.collector import Collector
-from elb import ElbCollector
+from elb import ElbCollector, utc_to_local
 
 
 def run_only_if_boto_is_available(func):
@@ -29,7 +29,10 @@ class TestElbCollector(CollectorTestCase):
 
     @run_only_if_boto_is_available
     def test_throws_exception_when_interval_not_multiple_of_60(self):
-        config = get_collector_config('ElbCollector', {'interval': 10})
+        config = get_collector_config(
+            'ElbCollector',
+            {'enabled': True,
+             'interval': 10})
         assertRaisesAndContains(Exception, 'multiple of', ElbCollector,
                                 *[config, None])
 
@@ -41,6 +44,7 @@ class TestElbCollector(CollectorTestCase):
         config = get_collector_config(
             'ElbCollector',
             {
+                'enabled': True,
                 'interval': 60,
                 'regions': {
                     'us-west-1': {
@@ -59,7 +63,7 @@ class TestElbCollector(CollectorTestCase):
 
         cw_conn = Mock()
         cw_conn.get_metric_statistics = Mock()
-        ts = datetime.datetime.now().replace(second=0, microsecond=0)
+        ts = datetime.datetime.utcnow().replace(second=0, microsecond=0)
 
         cw_conn.get_metric_statistics.side_effect = [
             [{u'Timestamp': ts, u'Average': 1.0, u'Unit': u'Count'}],
@@ -85,14 +89,14 @@ class TestElbCollector(CollectorTestCase):
         target = ts + datetime.timedelta(minutes=1)
         with mock.patch.object(datetime, 'datetime',
                                mock.Mock(wraps=datetime.datetime)) as patched:
-            patched.now.return_value = target
+            patched.utcnow.return_value = target
             collector.collect()
 
         self.assertPublishedMetricMany(
             publish_metric,
             {
                 'us-west-1a.elb1.HealthyHostCount': 1,
-                'us-west-1a.elb1.UnhealthyHostCount': 2,
+                'us-west-1a.elb1.UnHealthyHostCount': 2,
                 'us-west-1a.elb1.RequestCount': 3,
                 'us-west-1a.elb1.Latency': 4,
                 'us-west-1a.elb1.HTTPCode_ELB_4XX': 6,

@@ -11,6 +11,7 @@ Collect the elasticsearch stats for the local node
 
 import urllib2
 import re
+from diamond.collector import str_to_bool
 
 try:
     import json
@@ -53,6 +54,7 @@ class ElasticSearchCollector(diamond.collector.Collector):
             'path':     'elasticsearch',
             'stats':    ['jvm', 'thread_pool', 'indices'],
             'logstash_mode': False,
+            'cluster':  False,
         })
         return config
 
@@ -131,7 +133,7 @@ class ElasticSearchCollector(diamond.collector.Collector):
             self.log.error('Unable to import json')
             return {}
 
-        result = self._get('_cluster/nodes/_local/stats?all=true')
+        result = self._get('_nodes/_local/stats?all=true')
         if not result:
             return
 
@@ -209,7 +211,7 @@ class ElasticSearchCollector(diamond.collector.Collector):
 
         #
         # filesystem (may not be present, depending on access restrictions)
-        if 'fs' in data:
+        if 'fs' in data and 'data' in data['fs'] and data['fs']['data']:
             fs_data = data['fs']['data'][0]
             self._add_metric(metrics, 'disk.reads.count', fs_data,
                              ['disk_reads'])
@@ -237,13 +239,26 @@ class ElasticSearchCollector(diamond.collector.Collector):
             metrics['jvm.threads.count'] = jvm['threads']['count']
 
             gc = jvm['gc']
-            metrics['jvm.gc.collection.count'] = gc['collection_count']
-            metrics['jvm.gc.collection.time'] = gc['collection_time_in_millis']
+            collection_count = 0
+            collection_time_in_millis = 0
             for collector, d in gc['collectors'].iteritems():
                 metrics['jvm.gc.collection.%s.count' % collector] = d[
                     'collection_count']
+                collection_count += d['collection_count']
                 metrics['jvm.gc.collection.%s.time' % collector] = d[
                     'collection_time_in_millis']
+                collection_time_in_millis += d['collection_time_in_millis']
+            # calculate the totals, as they're absent in elasticsearch > 0.90.10
+            if 'collection_count' in gc:
+                metrics['jvm.gc.collection.count'] = gc['collection_count']
+            else:
+                metrics['jvm.gc.collection.count'] = collection_count
+
+            k = 'collection_time_in_millis'
+            if k in gc:
+                metrics['jvm.gc.collection.time'] = gc[k]
+            else:
+                metrics['jvm.gc.collection.time'] = collection_time_in_millis
 
         #
         # thread_pool
@@ -253,6 +268,28 @@ class ElasticSearchCollector(diamond.collector.Collector):
         #
         # network
         self._copy_two_level(metrics, 'network', data['network'])
+
+         #cluster
+        if str_to_bool(self.config['cluster']):
+            result = self._get('_cluster/health')
+
+            if not result:
+                return
+
+            self._add_metric(metrics, 'cluster_health.nodes.total',
+                             result, ['number_of_nodes'])
+            self._add_metric(metrics, 'cluster_health.nodes.data',
+                             result, ['number_of_data_nodes'])
+            self._add_metric(metrics, 'cluster_health.shards.active_primary',
+                             result, ['active_primary_shards'])
+            self._add_metric(metrics, 'cluster_health.shards.active',
+                             result, ['active_shards'])
+            self._add_metric(metrics, 'cluster_health.shards.relocating',
+                             result, ['relocating_shards'])
+            self._add_metric(metrics, 'cluster_health.shards.unassigned',
+                             result, ['unassigned_shards'])
+            self._add_metric(metrics, 'cluster_health.shards.initializing',
+                             result, ['initializing_shards'])
 
         if 'indices' in self.config['stats']:
             #
