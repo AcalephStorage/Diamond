@@ -65,9 +65,8 @@ class CephPoolStatsCollector(diamond.collector.Collector):
     def _publish_stat_sums(self, pool_stats):
         sums = {}
         for pool in pool_stats:
-            flat_pool = ceph.flatten_dictionary(pool)
-
-            for metric, value in flat_pool:
+            for path, value in ceph.flatten_dictionary(pool):
+                metric = '.'.join(path)
                 fval = float(value)
                 sums[metric] = (sums[metric] + fval) if metric in sums else fval
 
