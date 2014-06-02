@@ -16,12 +16,10 @@ def getIncludePaths(path):
     for f in os.listdir(path):
         cPath = os.path.abspath(os.path.join(path, f))
 
-        if os.path.isfile(cPath) and len(f) > 3 and f[-3:] == '.py':
+        if os.path.isfile(cPath) and len(f) > 3 and f.endswith('.py'):
             sys.path.append(os.path.dirname(cPath))
 
-    for f in os.listdir(path):
-        cPath = os.path.abspath(os.path.join(path, f))
-        if os.path.isdir(cPath):
+        elif os.path.isdir(cPath):
             getIncludePaths(cPath)
 
 collectors = {}
@@ -31,8 +29,13 @@ def getCollectors(path):
     for f in os.listdir(path):
         cPath = os.path.abspath(os.path.join(path, f))
 
-        if os.path.isfile(cPath) and len(f) > 3 and f[-3:] == '.py':
+        if os.path.isfile(cPath) and len(f) > 3 and f.endswith('.py'):
             modname = f[:-3]
+
+            if modname.startswith('Test'):
+                continue
+            if modname.startswith('test'):
+                continue
 
             try:
                 # Import the module
@@ -51,11 +54,8 @@ def getCollectors(path):
                 print "Failed to import module: %s. %s" % (
                     modname, traceback.format_exc())
                 collectors[modname] = False
-                continue
 
-    for f in os.listdir(path):
-        cPath = os.path.abspath(os.path.join(path, f))
-        if os.path.isdir(cPath):
+        elif os.path.isdir(cPath):
             getCollectors(cPath)
 
 handlers = {}
@@ -65,7 +65,7 @@ def getHandlers(path):
     for f in os.listdir(path):
         cPath = os.path.abspath(os.path.join(path, f))
 
-        if os.path.isfile(cPath) and len(f) > 3 and f[-3:] == '.py':
+        if os.path.isfile(cPath) and len(f) > 3 and f.endswith('.py'):
             modname = f[:-3]
 
             try:
@@ -86,11 +86,8 @@ def getHandlers(path):
                 print "Failed to import module: %s. %s" % (
                     modname, traceback.format_exc())
                 handlers[modname] = False
-                continue
 
-    for f in os.listdir(path):
-        cPath = os.path.abspath(os.path.join(path, f))
-        if os.path.isdir(cPath):
+        elif os.path.isdir(cPath):
             getHandlers(cPath)
 
 ################################################################################
@@ -180,7 +177,10 @@ if __name__ == "__main__":
 
         docFile.write("%s\n" % (collector))
         docFile.write("=====\n")
-        docFile.write("%s" % (collectors[collector].__doc__))
+        if collectors[collector].__doc__ is None:
+            print collectors[collector]
+            print collectors[collector].__doc__
+        docFile.write("%s\n" % (collectors[collector].__doc__))
         docFile.write("#### Options - [Generic Options](Configuration)\n")
         docFile.write("\n")
 

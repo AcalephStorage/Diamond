@@ -25,7 +25,10 @@ class Metric(object):
 
         # Validate the path, value and metric_type submitted
         if (None in [path, value] or metric_type not in self._METRIC_TYPES):
-            raise DiamondException("Invalid parameter.")
+            raise DiamondException(("Invalid parameter when creating new "
+                                    "Metric with path: %r value: %r "
+                                    "metric_type: %r")
+                                   % (path, value, metric_type))
 
         # If no timestamp was passed in, set it to the current time
         if timestamp is None:
@@ -36,18 +39,21 @@ class Metric(object):
                 try:
                     timestamp = int(timestamp)
                 except ValueError, e:
-                    raise DiamondException("Invalid parameter: %s" % e)
+                    raise DiamondException(("Invalid timestamp when "
+                                            "creating new Metric %r: %s")
+                                           % (path, e))
 
         # The value needs to be a float or an int.  If it is, great.  If not,
         # try to cast it to one of those.
-        if not isinstance(value, int) and not isinstance(value, float):
+        if not isinstance(value, (int, float)):
             try:
                 if precision == 0:
                     value = round(float(value))
                 else:
                     value = float(value)
             except ValueError, e:
-                raise DiamondException("Invalid parameter: %s" % e)
+                raise DiamondException(("Invalid value when creating new "
+                                        "Metric %r: %s") % (path, e))
 
         self.path = path
         self.value = value
@@ -134,12 +140,8 @@ class Metric(object):
             path = self.path.split('.')[3:]
             return '.'.join(path)
 
-        prefix = self.getPathPrefix()
-        prefix += '.'
-        prefix += self.host
-        prefix += '.'
-        prefix += self.getCollectorPath()
-        prefix += '.'
+        prefix = '.'.join([self.getPathPrefix(), self.host,
+                           self.getCollectorPath()])
 
-        offset = len(prefix)
+        offset = len(prefix) + 1
         return self.path[offset:]

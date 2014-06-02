@@ -1,9 +1,21 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+import sys
 import os
 from glob import glob
 import platform
+
+
+def running_under_virtualenv():
+    if hasattr(sys, 'real_prefix'):
+        return True
+    elif sys.prefix != getattr(sys, "base_prefix", sys.prefix):
+        return True
+    if os.getenv('VIRTUAL_ENV', False):
+        return True
+    return False
+
 
 if os.environ.get('USE_SETUPTOOLS'):
     from setuptools import setup
@@ -34,7 +46,7 @@ else:
     distro = platform.dist()[0]
     distro_major_version = platform.dist()[1].split('.')[0]
 
-    if os.getenv('VIRTUAL_ENV', False):
+    if running_under_virtualenv():
         data_files.append(('etc/diamond',
                            glob('conf/*.conf.*')))
         data_files.append(('etc/diamond/collectors',
@@ -52,7 +64,7 @@ else:
         if distro == 'Ubuntu':
             data_files.append(('/etc/init',
                                ['debian/upstart/diamond.conf']))
-        if distro in ['centos', 'redhat', 'debian']:
+        if distro in ['centos', 'redhat', 'debian', 'fedora']:
             data_files.append(('/etc/init.d',
                                ['bin/init.d/diamond']))
             data_files.append(('/var/log/diamond',
@@ -64,12 +76,10 @@ else:
     # Support packages being called differently on different distros
 
     # Are we in a virtenv?
-    if os.getenv('VIRTUAL_ENV', False):
+    if running_under_virtualenv():
         install_requires = ['ConfigObj', 'psutil', ]
     else:
-        if distro in ['centos', 'redhat']:
-            install_requires = ['python-configobj', 'psutil', ]
-        elif distro == ['debian', 'ubuntu']:
+        if distro == ['debian', 'ubuntu']:
             install_requires = ['python-configobj', 'python-psutil', ]
         # Default back to pip style requires
         else:
@@ -101,17 +111,16 @@ def pkgPath(root, path, rpath="/"):
         return
     files = []
     for spath in os.listdir(path):
+        if spath == 'test':
+            # ignore test directories
+            continue
         subpath = os.path.join(path, spath)
         spath = os.path.join(rpath, spath)
         if os.path.isfile(subpath):
             files.append(subpath)
-
-    data_files.append((root + rpath, files))
-    for spath in os.listdir(path):
-        subpath = os.path.join(path, spath)
-        spath = os.path.join(rpath, spath)
         if os.path.isdir(subpath):
             pkgPath(root, subpath, spath)
+    data_files.append((root + rpath, files))
 
 if os.name == 'nt':
     pkgPath(os.path.join(base_files, 'collectors'), 'src/collectors', '\\')

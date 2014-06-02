@@ -1,21 +1,21 @@
+# coding=utf-8
+
+"""
+Get ceph status from one node
+"""
+
 import subprocess
 import re
 import os
 import sys
 import json
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, '../ceph')
-
-import ceph
-
-
-"""
-Get ceph status from one node
-"""
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)),
+                                'ceph'))
+from ceph import CephCollector
 
 
-class CephStatsCollector(ceph.CephCollector):
+class CephStatsCollector(CephCollector):
     def _get_stats(self):
         """
         Get ceph stats
