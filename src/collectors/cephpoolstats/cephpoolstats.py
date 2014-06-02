@@ -81,7 +81,7 @@ class CephPoolStatsCollector(diamond.collector.Collector):
 
         for path, stat_value in ceph.flatten_dictionary(
             stats,
-            path=prefix
+            path=[prefix]
         ):
             stat_name = '.'.join(path)
             self.publish_gauge(stat_name, stat_value)
