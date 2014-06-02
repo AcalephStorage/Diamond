@@ -20,7 +20,7 @@ Get ceph pool stats from one node
 
 class CephPoolStatsCollector(diamond.collector.Collector):
     def get_default_config_help(self):
-        config_help = super(ceph.CephPoolStatsCollector, self).get_default_config_help()
+        config_help = super(CephPoolStatsCollector, self).get_default_config_help()
         config_help.update({
             'socket_path': 'The location of the ceph monitoring sockets.'
                            ' Defaults to "/var/run/ceph"',
@@ -83,7 +83,7 @@ class CephPoolStatsCollector(diamond.collector.Collector):
             stats,
             path=[prefix]
         ):
-            self.publish_gauge(name, stat_value)
+            self.publish_gauge(stat_name, stat_value)
 
     def collect(self):
         """
