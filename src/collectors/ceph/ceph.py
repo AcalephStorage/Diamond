@@ -137,7 +137,6 @@ class CephCollector(diamond.collector.Collector):
                           ' Defaults to "asok"',
             'ceph_binary': 'Path to "ceph" executable. '
                            'Defaults to /usr/bin/ceph.',
-            #'exempt_metrics': 'Comma-separated string of metric_paths to exempt from collection.', 
             'short_names': "If true, use cluster names instead of UUIDs"
                            "in metric paths.  Defaults to true.",
             'cluster_prefix': "Prefix for per-cluster metrics.  Defaults"
@@ -145,6 +144,11 @@ class CephCollector(diamond.collector.Collector):
             'osd_stats_enabled': "Whether to enable OSD service stats.  These are the most numerous and"
                            "may overload underpowered graphite instances when there are 100s of OSDs. "
                            "Defaults to true",
+            'osd_leveldb_enabled': "Enable OSD leveldb metrics.", 
+            'osd_mutex_enabled': "Enable OSD mutex metrics.", 
+            'osd_throttle_enabled': "Enable OSD throttle metrics.", 
+            'mon_leveldb_enabled': "Enable Monitor leveldb metrics.", 
+            'mon_throttle_enabled': "Enable Monitor throttle metrics.", 
             'service_stats_global': "If true, stats from osds and mons are"
                                     "stored under the cluster prefix (not by host).  If false, these"
                                     "stats are stored in per-host paths.",
@@ -163,11 +167,15 @@ class CephCollector(diamond.collector.Collector):
             'socket_path': '/var/run/ceph',
             'socket_ext': 'asok',
             'ceph_binary': '/usr/bin/ceph',
-            #'exempt_metrics': '', 
             'short_names': True,
             'cluster_prefix': 'ceph.cluster',
             'service_stats_global': False,
             'osd_stats_enabled': True,
+            'osd_leveldb_enabled': True, 
+            'osd_mutex_enabled': True,
+            'osd_throttle_enabled': True,
+            'mon_leveldb_enabled': True,
+            'mon_throttle_enabled': True,
             'long_running_detail': False,
             'perf_counters_enabled': True
         })
@@ -259,18 +267,6 @@ class CephCollector(diamond.collector.Collector):
 
         # publish averages
         self.publish_gauge(delta_avg_name, delta_avg, 6)
-
-    # def _is_exempted(self, stat_name):
-    #     if not self.config.has_key('exempted_metrics'):
-    #         self.config['exempted_metrics'] = [ ('^ceph.' + metric_path.strip()).replace('.', '\.').replace('*', '[\w\d\-_]+') + '(\..*)?$' for \
-    #                                          metric_path in self.config['exempt_metrics'].strip().split(',')] if \
-    #                                          self.config['exempt_metrics'].strip() else []
-
-    #     for exempt_path in self.config['exempted_metrics']:
-    #         if re.match(exempt_path, stat_name):
-    #             return True
-
-    #     return False
 
     def _ceph_time_to_seconds(self, val):
         """Convert Ceph time format into seconds.  Older Ceph
@@ -365,7 +361,6 @@ class CephCollector(diamond.collector.Collector):
             stats,
             path=[self._cluster_id_prefix(cluster_name, fsid), prefix]
         ):
-            #if not self._is_exempted(stat_name):
             stat_name = _PATH_SEP.join(stat_name)
             name = GlobalName(stat_name)
             if counter:
@@ -460,6 +455,27 @@ class CephCollector(diamond.collector.Collector):
 
         fsid = self._admin_command(path, ['config', 'get', 'fsid'])['fsid']
         stats, schema = self._get_perf_counters(path)
+
+        # Check for enablement flags and filter the perf counters
+        if service_type == 'osd':
+            for key in schema:
+                if self.config['osd_leveldb_enabled'] and key.startswith('leveldb'):
+                    del stats[key]
+                    del schema[key]
+                if self.config['osd_mutex_enabled'] and key.startswith('mutex'):
+                    del stats[key]
+                    del schema[key]
+                if self.config['osd_throttle_enabled'] and key.startswith('throttle'):
+                    del stats[key]
+                    del schema[key]
+        else if service_type == 'mon':
+            for key in schema:
+                if self.config['mon_leveldb_enabled'] and key.startswith('leveldb'):
+                    del stats[key]
+                    del schema[key]
+                if self.config['mon_throttle_enabled'] and key.startswith('throttle'):
+                    del stats[key]
+                    del schema[key]
 
         if self.config['service_stats_global']:
             counter_prefix = "{0}.{1}.{2}".format(self._cluster_id_prefix(cluster_name, fsid), service_type, service_id)
