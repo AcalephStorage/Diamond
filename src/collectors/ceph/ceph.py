@@ -468,7 +468,7 @@ class CephCollector(diamond.collector.Collector):
                 if self.config['osd_throttle_enabled'] and key.startswith('throttle'):
                     del stats[key]
                     del schema[key]
-        else if service_type == 'mon':
+        elif service_type == 'mon':
             for key in schema:
                 if self.config['mon_leveldb_enabled'] and key.startswith('leveldb'):
                     del stats[key]
