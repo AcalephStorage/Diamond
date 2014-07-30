@@ -126,6 +126,13 @@ class CephCollector(diamond.collector.Collector):
         self.config['service_stats_global'] = str_to_bool(self.config['service_stats_global'])
         self.config['perf_counters_enabled'] = str_to_bool(self.config['perf_counters_enabled'])
         self.config['osd_stats_enabled'] = str_to_bool(self.config['osd_stats_enabled'])
+        self.config['osd_filestore_enabled'] = str_to_bool(self.config['osd_filestore_enabled'])
+        self.config['osd_leveldb_enabled'] = str_to_bool(self.config['osd_leveldb_enabled'])
+        self.config['osd_mutex_enabled'] = str_to_bool(self.config['osd_mutex_enabled'])
+        self.config['osd_throttle_enabled'] = str_to_bool(self.config['osd_throttle_enabled'])
+        self.config['osd_wbthrottle_enabled'] = str_to_bool(self.config['osd_wbthrottle_enabled'])
+        self.config['mon_leveldb_enabled'] = str_to_bool(self.config['mon_leveldb_enabled'])
+        self.config['mon_throttle_enabled'] = str_to_bool(self.config['mon_throttle_enabled'])
         self.config['long_running_detail'] = str_to_bool(self.config['long_running_detail'])
 
     def get_default_config_help(self):
