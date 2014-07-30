@@ -458,7 +458,7 @@ class CephCollector(diamond.collector.Collector):
 
         # Check for enablement flags and filter the perf counters
         if service_type == 'osd':
-            for key in schema:
+            for key in schema.keys():
                 if self.config['osd_leveldb_enabled'] and key.startswith('leveldb'):
                     del stats[key]
                     del schema[key]
@@ -469,7 +469,7 @@ class CephCollector(diamond.collector.Collector):
                     del stats[key]
                     del schema[key]
         elif service_type == 'mon':
-            for key in schema:
+            for key in schema.keys():
                 if self.config['mon_leveldb_enabled'] and key.startswith('leveldb'):
                     del stats[key]
                     del schema[key]
