@@ -144,9 +144,11 @@ class CephCollector(diamond.collector.Collector):
             'osd_stats_enabled': "Whether to enable OSD service stats.  These are the most numerous and"
                            "may overload underpowered graphite instances when there are 100s of OSDs. "
                            "Defaults to true",
+            'osd_filestore_enabled': "Enable OSD filestore metrics.", 
             'osd_leveldb_enabled': "Enable OSD leveldb metrics.", 
             'osd_mutex_enabled': "Enable OSD mutex metrics.", 
             'osd_throttle_enabled': "Enable OSD throttle metrics.", 
+            'osd_wbthrottle_enabled': "Enable OSD WBThrottle metrics.", 
             'mon_leveldb_enabled': "Enable Monitor leveldb metrics.", 
             'mon_throttle_enabled': "Enable Monitor throttle metrics.", 
             'service_stats_global': "If true, stats from osds and mons are"
@@ -171,9 +173,11 @@ class CephCollector(diamond.collector.Collector):
             'cluster_prefix': 'ceph.cluster',
             'service_stats_global': False,
             'osd_stats_enabled': True,
+            'osd_filestore_enabled': True, 
             'osd_leveldb_enabled': True, 
             'osd_mutex_enabled': True,
             'osd_throttle_enabled': True,
+            'osd_wbthrottle_enabled': True, 
             'mon_leveldb_enabled': True,
             'mon_throttle_enabled': True,
             'long_running_detail': False,
@@ -459,21 +463,27 @@ class CephCollector(diamond.collector.Collector):
         # Check for enablement flags and filter the perf counters
         if service_type == 'osd':
             for key in schema.keys():
-                if self.config['osd_leveldb_enabled'] and key.startswith('leveldb'):
+                if not self.config['osd_filestore_enabled'] and key.startswith('filestore'):
                     del stats[key]
                     del schema[key]
-                if self.config['osd_mutex_enabled'] and key.startswith('mutex'):
+                if not self.config['osd_leveldb_enabled'] and key.startswith('leveldb'):
                     del stats[key]
                     del schema[key]
-                if self.config['osd_throttle_enabled'] and key.startswith('throttle'):
+                if not self.config['osd_mutex_enabled'] and key.startswith('mutex'):
+                    del stats[key]
+                    del schema[key]
+                if not self.config['osd_throttle_enabled'] and key.startswith('throttle'):
+                    del stats[key]
+                    del schema[key]
+                if not self.config['osd_wbthrottle_enabled'] and key.startswith('WBThrottle'):
                     del stats[key]
                     del schema[key]
         elif service_type == 'mon':
             for key in schema.keys():
-                if self.config['mon_leveldb_enabled'] and key.startswith('leveldb'):
+                if not self.config['mon_leveldb_enabled'] and key.startswith('leveldb'):
                     del stats[key]
                     del schema[key]
-                if self.config['mon_throttle_enabled'] and key.startswith('throttle'):
+                if not self.config['mon_throttle_enabled'] and key.startswith('throttle'):
                     del stats[key]
                     del schema[key]
 
